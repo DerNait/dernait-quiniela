@@ -24,14 +24,23 @@ class LeaderboardService
         $result = $quiniela->result()->first();
         $rules = $quiniela->scoringRules()->get();
 
-        if ($result) {
-            foreach ($quiniela->predictions()->get() as $prediction) {
-                $scored = $this->scoring->compute($prediction, $result, $rules);
-                $prediction->forceFill([
-                    'total_points' => $scored['total'],
-                    'points_breakdown' => $scored['breakdown'],
-                ])->save();
+        // While predictions are still open the match hasn't started, so nobody
+        // has points yet. Scoring against the empty 0-0 result would hand out
+        // misleading "provisional" points (e.g. "no red card" already true), so
+        // we keep everyone at zero until the quiniela closes.
+        $open = $quiniela->isOpen();
+
+        foreach ($quiniela->predictions()->get() as $prediction) {
+            if ($open || ! $result) {
+                $prediction->forceFill(['total_points' => 0, 'points_breakdown' => null])->save();
+                continue;
             }
+
+            $scored = $this->scoring->compute($prediction, $result, $rules);
+            $prediction->forceFill([
+                'total_points' => $scored['total'],
+                'points_breakdown' => $scored['breakdown'],
+            ])->save();
         }
 
         Cache::forget($this->cacheKey($quiniela));
@@ -46,17 +55,21 @@ class LeaderboardService
     public function leaderboard(Quiniela $quiniela): array
     {
         return Cache::remember($this->cacheKey($quiniela), 10, function () use ($quiniela) {
+            // Until predictions close everyone is tied at zero, ordered only by
+            // who submitted first.
+            $open = $quiniela->isOpen();
+
             $rows = $quiniela->predictions()
                 ->with('user:id,name')
-                ->orderByDesc('total_points')
-                ->orderBy('submitted_at')
+                ->when($open, fn ($q) => $q->orderBy('submitted_at'))
+                ->when(! $open, fn ($q) => $q->orderByDesc('total_points')->orderBy('submitted_at'))
                 ->get();
 
             return $rows->values()->map(fn ($prediction, $index) => [
                 'position' => $index + 1,
                 'user_id' => $prediction->user_id,
                 'name' => $prediction->user?->name,
-                'total_points' => $prediction->total_points,
+                'total_points' => $open ? 0 : $prediction->total_points,
                 'submitted_at' => $prediction->submitted_at,
                 'boost_category' => $prediction->boost_category,
             ])->all();
