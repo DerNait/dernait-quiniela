@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { CATEGORY_ORDER, CATEGORY_LABELS, predictionValue } from '../lib/prediction';
 
 const props = defineProps({
     prediction: { type: Object, required: true },
@@ -11,60 +12,8 @@ const props = defineProps({
     heading: { type: String, default: '' },
 });
 
-// Category order + labels mirror the backend enum, used when there is no
-// breakdown yet (e.g. before the match) so we can still show every pick.
-const ORDER = [
-    'winner', 'btts', 'ht_winner', 'first_team', 'goal_diff', 'total_goals',
-    'ht_exact', 'exact', 'first_scorer', 'red_card', 'penalty', 'first_minute',
-];
-const LABELS = {
-    winner: 'Ganador del partido',
-    btts: 'Ambos equipos marcan',
-    ht_winner: 'Ganador al medio tiempo',
-    first_team: 'Equipo del primer gol',
-    goal_diff: 'Diferencia de goles',
-    total_goals: 'Total de goles exacto',
-    ht_exact: 'Marcador exacto al medio tiempo',
-    exact: 'Marcador exacto final',
-    first_scorer: 'Jugador del primer gol',
-    red_card: '¿Habrá tarjeta roja?',
-    penalty: '¿Habrá penal?',
-    first_minute: 'Minuto del primer gol',
-};
-
-function outcome(h, a) {
-    if (h > a) return props.homeTeam;
-    if (h < a) return props.awayTeam;
-    return 'Empate';
-}
-function teamName(team) {
-    if (team === 'home') return props.homeTeam;
-    if (team === 'away') return props.awayTeam;
-    return 'Sin goles';
-}
-function signed(n) {
-    return n > 0 ? `+${n}` : `${n}`;
-}
-
-// What the participant predicted for a given category, as a display string.
-function pickValue(key) {
-    const p = props.prediction;
-    switch (key) {
-        case 'winner': return outcome(p.exact_home, p.exact_away);
-        case 'btts': return p.exact_home > 0 && p.exact_away > 0 ? 'Sí' : 'No';
-        case 'ht_winner': return outcome(p.ht_home, p.ht_away);
-        case 'first_team': return teamName(p.first_scoring_team);
-        case 'goal_diff': return signed(p.exact_home - p.exact_away);
-        case 'total_goals': return String(p.exact_home + p.exact_away);
-        case 'ht_exact': return `${p.ht_home} - ${p.ht_away}`;
-        case 'exact': return `${p.exact_home} - ${p.exact_away}`;
-        case 'first_scorer': return p.first_scorer_name || 'Sin goles';
-        case 'red_card': return p.red_card ? 'Sí' : 'No';
-        case 'penalty': return p.penalty ? 'Sí' : 'No';
-        case 'first_minute': return p.first_goal_minute ? `${p.first_goal_minute}'` : '—';
-        default: return '';
-    }
-}
+const teams = computed(() => ({ homeTeam: props.homeTeam, awayTeam: props.awayTeam }));
+const pickValue = (key) => predictionValue(props.prediction, key, teams.value);
 
 const rows = computed(() => {
     const p = props.prediction;
@@ -81,9 +30,9 @@ const rows = computed(() => {
         }));
     }
 
-    return ORDER.map((key) => ({
+    return CATEGORY_ORDER.map((key) => ({
         category: key,
-        label: LABELS[key],
+        label: CATEGORY_LABELS[key],
         value: pickValue(key),
         points: 0,
         boosted: p.boost_category === key,

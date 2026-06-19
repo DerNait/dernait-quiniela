@@ -3,7 +3,7 @@ import { ref, reactive, computed, watch } from 'vue';
 import api from '../lib/api';
 import Stepper from './Stepper.vue';
 import SegmentedControl from './SegmentedControl.vue';
-import PredictionDetail from './PredictionDetail.vue';
+import { predictionValue } from '../lib/prediction';
 
 const props = defineProps({
     quiniela: { type: Object, required: true },
@@ -60,27 +60,25 @@ function toggleBoost(category) {
     form.boost_category = form.boost_category === category ? null : category;
 }
 
-// Live mirror of the form, shaped like a Prediction so we can reuse
-// PredictionDetail to show answers filling in as the user types.
+// Resolve the picked scorer's name for the live answer display.
 const scorerName = computed(() => {
     if (!form.first_scorer_player_id) return null;
     const roster = [...props.quiniela.roster.home, ...props.quiniela.roster.away];
     return roster.find((pl) => pl.id === form.first_scorer_player_id)?.name ?? null;
 });
-const previewPrediction = computed(() => ({
-    exact_home: form.exact_home,
-    exact_away: form.exact_away,
-    ht_home: form.ht_home,
-    ht_away: form.ht_away,
-    first_scoring_team: form.first_scoring_team,
-    first_scorer_player_id: form.first_scorer_player_id,
-    first_scorer_name: scorerName.value,
-    red_card: form.red_card,
-    penalty: form.penalty,
-    first_goal_minute: form.first_goal_minute,
-    boost_category: form.boost_category,
-    points_breakdown: null,
-}));
+
+const teams = computed(() => ({ homeTeam: props.quiniela.home_team, awayTeam: props.quiniela.away_team }));
+
+// Each enabled category with its live answer + worth, used by the combined
+// "answer + x2" box: tap a row to see your answer and pick it for the x2.
+const answeredRules = computed(() =>
+    enabledRules.value.map((rule) => ({
+        category: rule.category,
+        label: rule.label,
+        points: rule.points,
+        value: predictionValue({ ...form, first_scorer_name: scorerName.value }, rule.category, teams.value),
+    })),
+);
 
 async function submit() {
     saving.value = true;
@@ -186,33 +184,27 @@ async function submit() {
             </div>
         </section>
 
-        <!-- Live summary: answers fill in as the form is completed -->
-        <PredictionDetail
-            :prediction="previewPrediction"
-            :home-team="quiniela.home_team"
-            :away-team="quiniela.away_team"
-            :show-points="false"
-            heading="Así va tu predicción"
-        />
-
-        <!-- x2 wildcard + scoring guide -->
+        <!-- Combined: live answers + pick one category as the x2 wildcard -->
         <section class="rounded-2xl border border-red-500/30 bg-red-500/5 p-4">
             <h3 class="text-sm font-bold text-red-300">
-                <font-awesome-icon icon="fa-solid fa-bolt" class="mr-1" /> Comodín x2
+                <font-awesome-icon icon="fa-solid fa-bolt" class="mr-1" /> Tu predicción y comodín x2
             </h3>
             <p class="mb-3 text-xs text-zinc-400">
-                Toca una categoría para duplicar los puntos que ganes en ella. Solo puedes elegir una.
+                Aquí ves cómo va tu predicción. Toca una categoría para duplicar (x2) los puntos que ganes en ella. Solo puedes elegir una.
             </p>
             <ul class="space-y-1.5">
-                <li v-for="rule in enabledRules" :key="rule.category">
+                <li v-for="rule in answeredRules" :key="rule.category">
                     <button
                         type="button"
-                        class="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left active:scale-[0.99]"
-                        :class="form.boost_category === rule.category ? 'bg-red-500/20 ring-1 ring-red-500/40' : ''"
+                        class="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left active:scale-[0.99]"
+                        :class="form.boost_category === rule.category ? 'bg-red-500/20 ring-1 ring-red-500/40' : 'bg-zinc-900/40'"
                         @click="toggleBoost(rule.category)"
                     >
-                        <span class="text-sm">{{ rule.label }}</span>
-                        <span class="flex items-center gap-2">
+                        <span class="min-w-0">
+                            <span class="block truncate text-sm text-zinc-300">{{ rule.label }}</span>
+                            <span class="block truncate text-sm font-bold text-zinc-100">{{ rule.value }}</span>
+                        </span>
+                        <span class="flex shrink-0 items-center gap-2">
                             <span class="text-xs font-bold text-zinc-400">{{ rule.points }} pts</span>
                             <span
                                 class="rounded-full px-2 py-0.5 text-xs font-black"
