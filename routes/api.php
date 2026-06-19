@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/quinielas', [QuinielaController::class, 'index']);
     Route::get('/quinielas/{quiniela}', [QuinielaController::class, 'show']);
     Route::get('/quinielas/{quiniela}/leaderboard', [QuinielaController::class, 'leaderboard']);
+    Route::get('/quinielas/{quiniela}/predictions', [QuinielaController::class, 'predictions']);
     Route::get('/quinielas/{quiniela}/live', [QuinielaController::class, 'live']);
     Route::put('/quinielas/{quiniela}/prediction', [PredictionController::class, 'store']);
 

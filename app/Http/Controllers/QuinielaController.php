@@ -38,4 +38,33 @@ class QuinielaController extends Controller
             'live' => QuinielaPresenter::live($quiniela),
         ]);
     }
+
+    /**
+     * Everyone's predictions + live points breakdown. Only revealed once the
+     * predictions are closed (match locked/live/finished or past kickoff), so
+     * nobody can peek before submitting. Used by the expandable leaderboard.
+     */
+    public function predictions(Quiniela $quiniela)
+    {
+        if ($quiniela->isOpen()) {
+            return response()->json(['closed' => false, 'predictions' => []]);
+        }
+
+        $predictions = $quiniela->predictions()
+            ->with(['user:id,name', 'firstScorer'])
+            ->get()
+            ->map(fn ($p) => array_merge(QuinielaPresenter::prediction($p), [
+                'user_id' => $p->user_id,
+                'name' => $p->user?->name,
+            ]))
+            ->values()
+            ->all();
+
+        return response()->json([
+            'closed' => true,
+            'home_team' => $quiniela->home_team,
+            'away_team' => $quiniela->away_team,
+            'predictions' => $predictions,
+        ]);
+    }
 }

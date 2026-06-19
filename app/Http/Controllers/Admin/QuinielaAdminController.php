@@ -59,13 +59,17 @@ class QuinielaAdminController extends Controller
         return response()->json(['message' => 'Quiniela eliminada.']);
     }
 
-    public function updateStatus(Request $request, Quiniela $quiniela)
+    public function updateStatus(Request $request, Quiniela $quiniela, LeaderboardService $leaderboard)
     {
         $data = $request->validate([
             'status' => ['required', 'in:scheduled,locked,live,finished'],
         ]);
 
         $quiniela->update($data);
+
+        // Recompute so provisional points reflect the current scoreline the
+        // moment predictions close / the match goes live.
+        $leaderboard->recalculate($quiniela);
 
         return response()->json(['quiniela' => QuinielaPresenter::summary($quiniela)]);
     }

@@ -26,6 +26,9 @@ import {
     faPlus,
     faMinus,
     faLock,
+    faChevronUp,
+    faChevronDown,
+    faHandPointer,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { faCircle, faSquare as faSquareRegular } from '@fortawesome/free-regular-svg-icons';
@@ -35,6 +38,7 @@ library.add(
     faWandMagicSparkles, faClipboardList, faBolt, faCircleCheck, faRotate,
     faArrowLeft, faRightFromBracket, faUserShield, faXmark, faSquare,
     faBullseye, faCakeCandles, faUsers, faPlus, faMinus, faLock,
+    faChevronUp, faChevronDown, faHandPointer,
     faCircle, faSquareRegular,
 );
 
