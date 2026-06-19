@@ -12,8 +12,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 COMPOSE="docker compose -f docker-compose.prod.yml"
-export HOST_UID="$(id -u)"
-export HOST_GID="$(id -g)"
+# Permite forzar el uid/gid dueño de los archivos (p.ej. correr como root pero
+# que artisan/composer escriban como el usuario 1000 dueño del proyecto).
+export HOST_UID="${HOST_UID:-$(id -u)}"
+export HOST_GID="${HOST_GID:-$(id -g)}"
 
 # Ejecutamos artisan/composer como el dueño real de los archivos (HOST_UID),
 # para que puedan escribir vendor/, bootstrap/cache/ y storage/ sin chocar con
