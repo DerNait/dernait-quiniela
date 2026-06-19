@@ -210,14 +210,16 @@ async function syncApi() {
                     </ul>
                 </div>
             </div>
-            <div class="mt-3 flex gap-2">
-                <select v-model="newPlayer.team" class="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm">
+            <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                <select v-model="newPlayer.team" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm sm:w-auto">
                     <option value="home">{{ q.home_team }}</option>
                     <option value="away">{{ q.away_team }}</option>
                 </select>
-                <input v-model="newPlayer.name" placeholder="Nombre jugador" class="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
-                <input v-model="newPlayer.number" placeholder="#" class="w-14 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm" />
-                <button class="rounded-lg bg-emerald-500 px-3 font-bold text-white" @click="addPlayer"><font-awesome-icon icon="fa-solid fa-plus" /></button>
+                <div class="flex flex-1 gap-2">
+                    <input v-model="newPlayer.name" placeholder="Nombre jugador" class="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm" />
+                    <input v-model="newPlayer.number" placeholder="#" class="w-12 shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-center text-sm" />
+                    <button class="shrink-0 rounded-lg bg-emerald-500 px-4 font-bold text-white active:scale-95" @click="addPlayer"><font-awesome-icon icon="fa-solid fa-plus" /></button>
+                </div>
             </div>
         </section>
 
