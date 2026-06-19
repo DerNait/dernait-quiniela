@@ -3,6 +3,7 @@ import { ref, reactive, computed, watch } from 'vue';
 import api from '../lib/api';
 import Stepper from './Stepper.vue';
 import SegmentedControl from './SegmentedControl.vue';
+import PredictionDetail from './PredictionDetail.vue';
 
 const props = defineProps({
     quiniela: { type: Object, required: true },
@@ -58,6 +59,28 @@ watch(() => form.exact_away, (v) => { if (form.ht_away > v) form.ht_away = v; })
 function toggleBoost(category) {
     form.boost_category = form.boost_category === category ? null : category;
 }
+
+// Live mirror of the form, shaped like a Prediction so we can reuse
+// PredictionDetail to show answers filling in as the user types.
+const scorerName = computed(() => {
+    if (!form.first_scorer_player_id) return null;
+    const roster = [...props.quiniela.roster.home, ...props.quiniela.roster.away];
+    return roster.find((pl) => pl.id === form.first_scorer_player_id)?.name ?? null;
+});
+const previewPrediction = computed(() => ({
+    exact_home: form.exact_home,
+    exact_away: form.exact_away,
+    ht_home: form.ht_home,
+    ht_away: form.ht_away,
+    first_scoring_team: form.first_scoring_team,
+    first_scorer_player_id: form.first_scorer_player_id,
+    first_scorer_name: scorerName.value,
+    red_card: form.red_card,
+    penalty: form.penalty,
+    first_goal_minute: form.first_goal_minute,
+    boost_category: form.boost_category,
+    points_breakdown: null,
+}));
 
 async function submit() {
     saving.value = true;
@@ -162,6 +185,15 @@ async function submit() {
                 <SegmentedControl v-model="form.penalty" :options="yesNo" />
             </div>
         </section>
+
+        <!-- Live summary: answers fill in as the form is completed -->
+        <PredictionDetail
+            :prediction="previewPrediction"
+            :home-team="quiniela.home_team"
+            :away-team="quiniela.away_team"
+            :show-points="false"
+            heading="Así va tu predicción"
+        />
 
         <!-- x2 wildcard + scoring guide -->
         <section class="rounded-2xl border border-red-500/30 bg-red-500/5 p-4">

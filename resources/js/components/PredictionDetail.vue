@@ -7,6 +7,8 @@ const props = defineProps({
     awayTeam: { type: String, default: 'Visitante' },
     // Show the points earned per category (only meaningful once the match started).
     showPoints: { type: Boolean, default: true },
+    // Optional custom section heading.
+    heading: { type: String, default: '' },
 });
 
 // Category order + labels mirror the backend enum, used when there is no
@@ -93,7 +95,7 @@ const rows = computed(() => {
 <template>
     <section class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
         <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-zinc-400">
-            {{ showPoints ? 'Predicción y puntos' : 'Predicción' }}
+            {{ heading || (showPoints ? 'Predicción y puntos' : 'Predicción') }}
         </h3>
         <ul class="space-y-1.5">
             <li
