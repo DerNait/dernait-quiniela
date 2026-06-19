@@ -35,13 +35,30 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Full 26-man World Cup 2026 squads (Group E), per official call-ups.
         $this->createQuiniela(
             name: 'Alemania vs Costa de Marfil',
             home: 'Alemania', away: 'Costa de Marfil',
             homeFlag: '🇩🇪', awayFlag: '🇨🇮',
             kickoff: '2026-06-20 15:00:00',
-            homePlayers: ['Kimmich', 'Musiala', 'Wirtz', 'Havertz', 'Füllkrug', 'Sané', 'Gnabry', 'Rüdiger'],
-            awayPlayers: ['Haller', 'Pépé', 'Kessié', 'Gradel', 'Boly', 'Seri', 'Diallo', 'Krasso'],
+            homePlayers: [
+                'Oliver Baumann', 'Manuel Neuer', 'Alexander Nübel',
+                'Waldemar Anton', 'Nathaniel Brown', 'Pascal Groß', 'Joshua Kimmich',
+                'Aleksandar Pavlović', 'David Raum', 'Antonio Rüdiger', 'Nico Schlotterbeck',
+                'Jonathan Tah', 'Malick Thiaw',
+                'Nadiem Amiri', 'Leon Goretzka', 'Lennart Karl', 'Felix Nmecha', 'Angelo Stiller',
+                'Maximilian Beier', 'Kai Havertz', 'Jamie Leweling', 'Jamal Musiala',
+                'Leroy Sané', 'Deniz Undav', 'Florian Wirtz', 'Nick Woltemade',
+            ],
+            awayPlayers: [
+                'Yahia Fofana', 'Mohamed Koné', 'Alban Lafont',
+                'Emmanuel Agbadou', 'Clément Akpa', 'Ousmane Diomandé', 'Guéla Doué',
+                'Ghislain Konan', 'Odilon Kossounou', 'Evan Ndicka', 'Wilfried Singo',
+                'Seko Fofana', 'Parfait Guiagon', 'Christ Inao Oulaï', 'Franck Kessié',
+                'Ibrahim Sangaré', 'Jean-Michaël Seri',
+                'Simon Adingra', 'Ange-Yoan Bonny', 'Amad Diallo', 'Oumar Diakité',
+                'Yan Diomandé', 'Evann Guessand', 'Nicolas Pépé', 'Bazoumana Touré', 'Elye Wahi',
+            ],
         );
 
         $this->createQuiniela(
@@ -49,8 +66,24 @@ class DatabaseSeeder extends Seeder
             home: 'Ecuador', away: 'Curazao',
             homeFlag: '🇪🇨', awayFlag: '🇨🇼',
             kickoff: '2026-06-20 18:00:00',
-            homePlayers: ['E. Valencia', 'Caicedo', 'Plata', 'Sarmiento', 'Estupiñán', 'Hincapié', 'Rodríguez', 'Mena'],
-            awayPlayers: ['Janga', 'L. Bacuna', 'Bonevacia', 'Antonia', 'Martina', 'Sambo', 'Kingsley', 'Dumfries'],
+            homePlayers: [
+                'Gonzalo Valle', 'Hernán Galíndez', 'Moisés Ramírez',
+                'Piero Hincapié', 'Willian Pacho', 'Angelo Preciado', 'Félix Torres',
+                'Jackson Porozo', 'Joel Ordóñez', 'Pervis Estupiñán', 'Yaimar Medina',
+                'Alan Franco', 'Moisés Caicedo', 'Pedro Vite', 'Kendry Páez', 'Jordy Alcívar',
+                'Denil Castillo', 'Anthony Valencia', 'Alan Minda',
+                'Enner Valencia', 'Kevin Rodríguez', 'Gonzalo Plata', 'John Yeboah',
+                'Nilson Angulo', 'Jordy Caicedo', 'Jeremy Arévalo',
+            ],
+            awayPlayers: [
+                'Eloy Room', 'Trevor Doornbusch', 'Tyrick Bodak',
+                'Armando Obispo', 'Deveron Fonville', 'Joshua Brenet', 'Jurien Gaari',
+                'Riechedly Bazoer', 'Roshon van Eijma', 'Sherel Floranus', 'Shurandy Sambo',
+                'Leandro Bacuna', 'Juninho Bacuna', 'Livano Comenencia', 'Kevin Felida',
+                "Ar'Jany Martha", 'Tyrese Noslin', 'Godfried Roemeratoe',
+                'Jeremy Antonisse', 'Tahith Chong', 'Kenji Gorré', 'Sontje Hansen',
+                'Gervane Kastaneer', 'Brandley Kuwas', 'Jurgen Locadia', 'Jearl Margaritha',
+            ],
         );
     }
 
@@ -84,11 +117,13 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        foreach ($homePlayers as $i => $playerName) {
-            $quiniela->players()->create(['team' => 'home', 'name' => $playerName, 'number' => $i + 1]);
+        // Real jersey numbers aren't loaded, so we leave them null (the dropdown
+        // just shows the name).
+        foreach ($homePlayers as $playerName) {
+            $quiniela->players()->create(['team' => 'home', 'name' => $playerName, 'number' => null]);
         }
-        foreach ($awayPlayers as $i => $playerName) {
-            $quiniela->players()->create(['team' => 'away', 'name' => $playerName, 'number' => $i + 1]);
+        foreach ($awayPlayers as $playerName) {
+            $quiniela->players()->create(['team' => 'away', 'name' => $playerName, 'number' => null]);
         }
         // Own-goal options for the "first scorer" dropdown.
         $quiniela->players()->create(['team' => 'home', 'name' => 'Autogol ('.$home.')', 'kind' => 'own_goal']);
