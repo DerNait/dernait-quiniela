@@ -56,6 +56,24 @@ watch(totalGoals, (total) => {
 watch(() => form.exact_home, (v) => { if (form.ht_home > v) form.ht_home = v; });
 watch(() => form.exact_away, (v) => { if (form.ht_away > v) form.ht_away = v; });
 
+// First-scorer options follow the team chosen in "¿Quién marca primero?": only
+// that team's players (plus its own-goal option) — no point scrolling past the
+// other squad's 26 names.
+const scorerOptions = computed(() => {
+    if (form.first_scoring_team === 'home') return props.quiniela.roster.home;
+    if (form.first_scoring_team === 'away') return props.quiniela.roster.away;
+    return [];
+});
+const scorerTeamName = computed(() =>
+    form.first_scoring_team === 'away' ? props.quiniela.away_team : props.quiniela.home_team,
+);
+// Drop a chosen scorer that no longer belongs to the selected team.
+watch(() => form.first_scoring_team, () => {
+    if (form.first_scorer_player_id && !scorerOptions.value.some((pl) => pl.id === form.first_scorer_player_id)) {
+        form.first_scorer_player_id = null;
+    }
+});
+
 function toggleBoost(category) {
     form.boost_category = form.boost_category === category ? null : category;
 }
@@ -137,22 +155,18 @@ async function submit() {
             </div>
 
             <div v-if="totalGoals > 0">
-                <h3 class="mb-2 text-sm font-bold text-zinc-300">Jugador del primer gol</h3>
+                <h3 class="mb-2 text-sm font-bold text-zinc-300">
+                    Jugador del primer gol
+                    <span class="font-normal text-zinc-500">· {{ scorerTeamName }}</span>
+                </h3>
                 <select
                     v-model="form.first_scorer_player_id"
                     class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-base outline-none focus:border-red-500"
                 >
                     <option :value="null">No sé / lo dejo en blanco</option>
-                    <optgroup :label="quiniela.home_team">
-                        <option v-for="pl in quiniela.roster.home" :key="pl.id" :value="pl.id">
-                            {{ pl.name }}{{ pl.number ? ` (${pl.number})` : '' }}
-                        </option>
-                    </optgroup>
-                    <optgroup :label="quiniela.away_team">
-                        <option v-for="pl in quiniela.roster.away" :key="pl.id" :value="pl.id">
-                            {{ pl.name }}{{ pl.number ? ` (${pl.number})` : '' }}
-                        </option>
-                    </optgroup>
+                    <option v-for="pl in scorerOptions" :key="pl.id" :value="pl.id">
+                        {{ pl.name }}{{ pl.number ? ` (${pl.number})` : '' }}
+                    </option>
                 </select>
             </div>
 
