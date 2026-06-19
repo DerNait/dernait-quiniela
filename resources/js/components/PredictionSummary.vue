@@ -21,7 +21,6 @@ const showPoints = computed(() => ['live', 'finished'].includes(props.quiniela.s
             <p class="text-4xl font-black">{{ pred.total_points }}</p>
         </div>
 
-        <h3 class="text-sm font-bold uppercase tracking-wide text-zinc-400">Tu predicción</h3>
         <PredictionDetail
             :prediction="pred"
             :home-team="quiniela.home_team"

@@ -172,24 +172,24 @@ async function submit() {
                 Toca una categoría para duplicar los puntos que ganes en ella. Solo puedes elegir una.
             </p>
             <ul class="space-y-1.5">
-                <li
-                    v-for="rule in enabledRules"
-                    :key="rule.category"
-                    class="flex items-center justify-between rounded-lg px-2 py-1.5"
-                    :class="form.boost_category === rule.category ? 'bg-red-500/20 ring-1 ring-red-500/40' : ''"
-                >
-                    <span class="text-sm">{{ rule.label }}</span>
-                    <span class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-zinc-400">{{ rule.points }} pts</span>
-                        <button
-                            type="button"
-                            class="rounded-full px-2 py-0.5 text-xs font-black active:scale-90"
-                            :class="form.boost_category === rule.category
-                                ? 'bg-red-500 text-white'
-                                : 'bg-zinc-800 text-zinc-400'"
-                            @click="toggleBoost(rule.category)"
-                        >x2</button>
-                    </span>
+                <li v-for="rule in enabledRules" :key="rule.category">
+                    <button
+                        type="button"
+                        class="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left active:scale-[0.99]"
+                        :class="form.boost_category === rule.category ? 'bg-red-500/20 ring-1 ring-red-500/40' : ''"
+                        @click="toggleBoost(rule.category)"
+                    >
+                        <span class="text-sm">{{ rule.label }}</span>
+                        <span class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-zinc-400">{{ rule.points }} pts</span>
+                            <span
+                                class="rounded-full px-2 py-0.5 text-xs font-black"
+                                :class="form.boost_category === rule.category
+                                    ? 'bg-red-500 text-white'
+                                    : 'bg-zinc-800 text-zinc-400'"
+                            >x2</span>
+                        </span>
+                    </button>
                 </li>
             </ul>
         </section>
