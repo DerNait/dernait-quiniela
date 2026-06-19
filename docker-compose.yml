@@ -1,0 +1,63 @@
+# Lightweight stack for the quiniela app: nginx + php-fpm + mysql, plus a node
+# service that runs the Vite dev server during development.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: quiniela-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PHP_OPCACHE_VALIDATE_TIMESTAMPS: "1"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: quiniela-nginx
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: quiniela-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-quiniela}
+      MYSQL_USER: ${DB_USERNAME:-quiniela}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "33061:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASSWORD:-rootsecret}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Dev only: Vite HMR server. In production you build static assets instead.
+  node:
+    image: node:22-alpine
+    container_name: quiniela-node
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host"
+
+volumes:
+  dbdata:

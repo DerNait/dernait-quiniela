@@ -1,0 +1,66 @@
+# Producción: nginx (solo en localhost, detrás del reverse proxy del host) +
+# php-fpm + mysql. Los assets de Vite se compilan en local y se suben por rsync,
+# por eso NO hay servicio node aquí (el server es chico y un build lo tumbaría).
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: quiniela-app
+    container_name: quiniela-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - quiniela
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: quiniela-nginx
+    restart: unless-stopped
+    # Solo escucha en localhost: el nginx del host (reverse proxy) hace el HTTPS.
+    ports:
+      - "127.0.0.1:${APP_PORT:-8310}:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - quiniela
+
+  mysql:
+    image: mysql:8.0
+    container_name: quiniela-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-quiniela}
+      MYSQL_USER: ${DB_USERNAME:-quiniela}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-${DB_PASSWORD}}
+    command: --default-authentication-plugin=mysql_native_password
+    # Publicado SOLO en el localhost del VPS (no a internet): para conectarse con
+    # un cliente vía túnel SSH si hace falta.
+    ports:
+      - "127.0.0.1:3309:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - quiniela
+
+networks:
+  quiniela:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
